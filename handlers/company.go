@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/kcoleman731/test-server/controller"
 )
 
@@ -16,19 +15,25 @@ type CompanyHandler struct {
 func (handler *CompanyHandler) Index(writter http.ResponseWriter, request *http.Request) {
 	fmt.Printf("Routing %v Request to Company Controller\n", request.Method)
 
-	controller := controller.CompanyController{DB: handler.DB, Params: mux.Vars(request)}
+	genericController, err := controller.NewController(request, handler.DB)
+	if err != nil {
+
+	}
+	companyController := genericController.(controller.CompanyController)
+
 	switch request.Method {
 	case "GET":
-		writeResponse(writter, controller.Get(request))
+		fmt.Printf("GET Request with params %v\n", controller.Request.Params)
+		writeResponse(writter, companyController.Get())
 
 	case "POST":
-		writeResponse(writter, controller.Post(request))
+		writeResponse(writter, companyController.Post())
 
 	case "PUT":
-		writeResponse(writter, controller.Update(request))
+		writeResponse(writter, companyController.Update())
 
 	case "DELETE":
-		writeResponse(writter, controller.Delete(request))
+		writeResponse(writter, companyController.Delete())
 	}
 }
 
