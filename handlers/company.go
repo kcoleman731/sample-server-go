@@ -13,17 +13,12 @@ type CompanyHandler struct {
 }
 
 func (handler *CompanyHandler) Index(writter http.ResponseWriter, request *http.Request) {
-	fmt.Printf("Routing %v Request to Company Controller\n", request.Method)
-
-	genericController, err := controller.NewController(request, handler.DB)
+	companyController, err := NewCompanyController(request, handler.DB)
 	if err != nil {
 
 	}
-	companyController := genericController.(controller.CompanyController)
-
 	switch request.Method {
 	case "GET":
-		fmt.Printf("GET Request with params %v\n", controller.Request.Params)
 		writeResponse(writter, companyController.Get())
 
 	case "POST":
@@ -56,4 +51,12 @@ func writeResponse(writter http.ResponseWriter, result controller.HTTPResult) {
 		writter.WriteHeader(result.Code)
 		writter.Write(result.JSONData)
 	}
+}
+
+func NewCompanyController(request *http.Request, DB *sql.DB) (controller.CompanyController, error) {
+	genericController, err := controller.NewController(request, DB)
+	if err != nil {
+
+	}
+	return genericController.(controller.CompanyController), err
 }
