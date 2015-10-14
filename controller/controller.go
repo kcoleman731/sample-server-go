@@ -17,8 +17,10 @@ import (
 
 // Controller models an HTTP controller.
 type Controller struct {
+
 	// Request models the HTTP request submitted to a controller.
 	Request HTTPRequest
+
 	// DB models a database connection to the underlying database
 	// for teh controller.
 	DB *sql.DB
@@ -29,15 +31,19 @@ type Controller struct {
 // requests dispatched from a Handler, performs crud operations,
 // and returns the result of the operation to the Handler.
 type ControllerInterface interface {
+
 	// Post notifies the controller that an HTTP POST request has
 	// been made to its model's resource API.
 	Post()
+
 	// Get notifies the controller that an HTTP GET request has
 	// been made to its model's resource API.
 	Get()
+
 	// PUT notifies the controller that an HTTP PUT request has
 	// been made to its model's resource API.
 	Update()
+
 	// DELTE notifies the controller that an HTTP DELETE request has
 	// been made to its model's resource API.
 	Delete()
@@ -74,8 +80,10 @@ type HTTPResult struct {
 // HTTPRequest models an HTTP request sumbitted to the controller
 // for processing.
 type HTTPRequest struct {
+
 	// URLParams contains all URL parameters submitted with the request.
 	Params map[string]string
+
 	// Params models the body of the request as a hashmap.
 	Body map[string]interface{}
 }
@@ -103,7 +111,7 @@ func ParseJSON(rc io.Reader) (map[string]interface{}, error) {
 	return JSONMap, nil
 }
 
-func ParseModleJSON(r *http.Request) (*model.Company, error) {
+func ParseModelJSON(r *http.Request) (*model.Company, error) {
 	// Read the request body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

@@ -81,3 +81,82 @@ func (c *CompanyController) Delete() HTTPResult {
 	}
 	return HTTPResult{http.StatusOK, nil, nil}
 }
+
+//////////////////////////////////////////////
+
+var modelStructTemplate string = `type {{.Name}} struct {
+	{{range .Fields}}{{.Name}} {{.Type}} {{.JsonMeta}}{{if .Comment}} // {{.Comment}}{{end}}
+	{{end}}
+}
+`
+
+var controllerAPITemplate string = `
+
+// Post processes HTTP POST requests made to the /companies API.
+func (c *{{.Name}}Controller) Post() HTTPResult {
+	// Persist Company Data
+	err := c.{{.Name}}.Save(c.DB)
+	if err != nil {
+		return HTTPResult{http.StatusInternalServerError, nil, err}
+	}
+
+	// Serialize Company Data
+	objectData, err := json.Marshal(c.{{.Name}})
+	if err != nil {
+		return HTTPResult{http.StatusInternalServerError, nil, err}
+	}
+
+	return HTTPResult{http.StatusCreated, objectData, err}
+}
+
+// Get processes HTTP GET requests made to the /companies API.
+func (c *{{.Name}}Controller) Get() HTTPResult {
+	objectID := c.Request.Body["id"].(string) // Add model method to get JSON tag from struct attribute
+
+	// Query for company based on company_id
+	object := &model.{{.Name}}{}
+	err := object.Find(c.DB, objectID)
+	if err != nil {
+		return HTTPResult{http.StatusInternalServerError, nil, err}
+	}
+
+	// If we have a nil object identifier, the object doesn not exist.
+	if object.Identifier == "" {
+		return HTTPResult{http.StatusNotFound, nil, err}
+	}
+
+	// We have a valid company, serialize and return
+	objectData, err := json.Marshal(object)
+	if err != nil {
+		return HTTPResult{http.StatusInternalServerError, nil, err}
+	}
+
+	return HTTPResult{http.StatusOK, companyData, nil}
+}
+
+// Update processes HTTP PUT requests made to the /companies API.
+func (c *{{.Name}}Controller) Update() HTTPResult {
+	// Persist Object Data
+	err := c.{{.Name}}.Update(c.DB)
+	if err != nil {
+		return HTTPResult{http.StatusNotFound, nil, err}
+	}
+
+	// Serialize Object Data
+	objectData, err := json.Marshal(c.{{.Name}})
+	if err != nil {
+		return HTTPResult{http.StatusInternalServerError, nil, err}
+	}
+	return HTTPResult{http.StatusOK, objectData, nil}
+}
+
+// Delete processes HTTP DELETE requests made to the /companies API.
+func (c *{{.Name}}Controller) Delete() HTTPResult {
+	// Delete Object Data
+	err := c.{{.Name}}.Delete(c.DB)
+	if err != nil {
+		return HTTPResult{http.StatusNotFound, nil, err}
+	}
+	return HTTPResult{http.StatusOK, nil, nil}
+}
+`
