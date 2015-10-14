@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/kcoleman731/test-server/model"
+	"github.com/kcoleman731/sample-server-go/model"
 )
 
 // CompanyController provides for processing HTTP requests made to the /companies

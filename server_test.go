@@ -8,7 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kcoleman731/test-server/controller"
+	"github.com/kcoleman731/sample-server-go/controller"
+
+	//"github.com/kcoleman731/test-server/controller"
 )
 
 var (

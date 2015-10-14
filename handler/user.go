@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/kcoleman731/test-server/controller"
+	"github.com/kcoleman731/sample-server-go/controller"
 )
 
 type UserHandler struct {

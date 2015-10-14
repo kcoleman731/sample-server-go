@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/kcoleman731/test-server/controller"
+	"github.com/kcoleman731/sample-server-go/controller"
 )
 
 type CompanyHandler struct {
@@ -14,15 +14,14 @@ type CompanyHandler struct {
 }
 
 func (handler *CompanyHandler) Index(writter http.ResponseWriter, request *http.Request) {
+	controller := controller.CompanyController{DB: handler.DB, Params: mux.Vars(request)}
 	fmt.Printf("Routing Request to Company Controller\n")
 
 	route := request.RequestURI
 	fmt.Printf("Current Route %v\n", route)
 
-	controller := controller.CompanyController{DB: handler.DB}
 	switch request.Method {
 	case "GET":
-		fmt.Printf("GET Request with parameters %v\n", mux.Vars(request))
 		controller.Get(request)
 
 	case "POST":
@@ -32,18 +31,22 @@ func (handler *CompanyHandler) Index(writter http.ResponseWriter, request *http.
 		controller.Update(request)
 
 	case "DELETE":
-		ontroller.Delete(request)
+		controller.Delete(request)
 	}
 }
 
-func (handler *CompanyHandler) Products(request *http.Request) {
+func (handler *CompanyHandler) Products(writter http.ResponseWriter, request *http.Request) {
 
 }
 
-func (handler *CompanyHandler) Features(request *http.Request) {
+func (handler *CompanyHandler) Features(writter http.ResponseWriter, request *http.Request) {
 
 }
 
-func (handler *CompanyHandler) Integrations(request *http.Request) {
+func (handler *CompanyHandler) Integrations(writter http.ResponseWriter, request *http.Request) {
+
+}
+
+func (handler *CompanyHandler) Requests(writter http.ResponseWriter, request *http.Request) {
 
 }

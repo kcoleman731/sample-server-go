@@ -2,21 +2,23 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/kcoleman731/test-server/handlers"
+	"github.com/kcoleman731/sample-server-go/handler"
 )
 
+// Setup Handlers
+var companyHandler = handler.CompanyHandler{DB: Database}
+var productHandler = handler.ProductHandler{DB: Database}
+var featureHandler = handler.FeatureHandler{DB: Database}
+var userHandler = handler.UserHandler{DB: Database}
+var requestHandler = handler.RequestHandler{DB: Database}
+var integrationHandler = handler.IntegrationHandler{DB: Database}
+
+// RouteRequest routes HTTP requests to the appropriate router.
+// The below handler statments specify the Server API
 func RouteRequest() *mux.Router {
 
 	// Setup out router
 	r := mux.NewRouter()
-
-	// Setup Handlers
-	companyHandler := handlers.CompanyHandler{DB: Database}
-	productHandler := handlers.ProductHandler{DB: Database}
-	featureHandler := handlers.FeatureHandler{DB: Database}
-	userHandler := handlers.UserHandler{DB: Database}
-	requestHandler := handlers.RequestHandler{DB: Database}
-	integrationHandler := handlers.IntegrationHandler{DB: Database}
 
 	//---------------
 	// Company Routes
@@ -70,5 +72,4 @@ func RouteRequest() *mux.Router {
 	r.HandleFunc("/integrations/{integration_id}", integrationHandler.Index)
 
 	return r
-	//http.Handle("/", r)
 }
