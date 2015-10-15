@@ -2,88 +2,99 @@ package model
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"strconv"
+	"reflect"
+
+	"github.com/kcoleman731/evergreen"
 )
 
 const CompanyResource string = "CompanyResource"
 
 type Company struct {
-	Identifier string      `json:"company_id"`
-	Name       string      `json:"name"`
-	Funding    string      `json:"funding"`
-	Website    string      `json:"website"`
-	Created    interface{} `json:"created"`
+	Model
+	ModelInterface
+	Name    string `json:"name"`
+	Funding string `json:"funding"`
+	Website string `json:"website"`
+	Created string `json:"created"`
 }
 
-func (company *Company) Find(database *sql.DB, identifer string) error {
-	sql := "SELECT * FROM companies WHERE company_id = $1"
-	fmt.Printf("Querying for company by id %v\n", identifer)
-	rows, err := database.Query(sql, identifer)
+func (c *Company) Create() error {
+	query := evergreen.Query.Insert(c.tableName).Collums(c.DBCollums())
+	rows, err := c.db.Query(query)
 	if err != nil {
-		fmt.Printf("Failed finding company with error  - %+v\n", err)
+		return err
+	}
+	rowIdentifier, err := evergreen.DatabaseIdentifier(rows)
+	if err != nil {
+		return err
+	}
+	c.Identifier = rowIdentifier
+	return err
+}
+
+func (c *Company) Find(values map[string]interface{}, limit int) error {
+	query := evergreen.Query.Select("*").From(c.tableName).Where("company_id").Values(1)
+	rows, err := database.Query(query)
+	if err != nil {
+		return err
 	}
 	*company = CompanyFromQuery(rows)
 	return err
 }
 
-func (company *Company) Save(database *sql.DB) error {
-	sql := "INSERT INTO companies(name, website, funding) VALUES($1,$2,$3) RETURNING company_id;"
-	rows, err := database.Query(sql, company.Name, company.Website, company.Funding)
+func (c *Company) Update(u map[string]interface{}) error {
+	query := evergreen.Query.Insert(c.tableName).Collums(Keys(u)).Values(Values(u)).Return("company_id")
+	rows, err := database.Query(query)
 	if err != nil {
-		fmt.Printf("Failed persisting company with error  - %+v\n", err)
-	}
-	rowIdentifier, err := DatabaseIdentifier(rows)
-	if err != nil {
-		fmt.Printf("No Company ID compadre %v\n", rowIdentifier)
-	}
-	company.Identifier = rowIdentifier
-	return err
-}
-
-func (company *Company) Update(database *sql.DB) error {
-	companyID, err := strconv.Atoi(company.Identifier)
-	sql := "UPDATE companies SET name = $1, website = $2, funding = $3 WHERE company_id = $4 RETURNING company_id;"
-	rows, err := database.Query(sql, company.Name, company.Website, company.Funding, companyID)
-	if err != nil {
-		fmt.Printf("Failed persisting company update with error  - %+v\n", err)
-	}
-
-	rowIdentifier, err := DatabaseIdentifier(rows)
-	if err != nil {
-		fmt.Printf("No Company ID compadre %v\n", rowIdentifier)
+		err
 	}
 	return err
 }
 
-func (company *Company) Delete(database *sql.DB) error {
-	sql := "INSERT INTO companies(name, website) VALUES($1,$2);"
-	rows, err := database.Query(sql, company.Name, company.Website, company.Funding)
+func (c *Company) Delete() error {
+	query := evergreen.Query.Delete(c.tableName).Collmns("database_identifier").Values("values")
+	rows, err := c.db.Query(query)
 	if err != nil {
-		fmt.Printf("Failed persisting company with error  - %+v\n", err)
-	}
-	rowIdentifier, err := DatabaseIdentifier(rows)
-	if err != nil {
-		fmt.Printf("No Company ID compadre %v\n", rowIdentifier)
+		return err
 	}
 	return err
 }
 
-func DatabaseIdentifier(rows *sql.Rows) (string, error) {
-	var err error
-	var companyID string
-	for rows.Next() {
-		err = rows.Scan(&companyID)
-		if err != nil {
-			fmt.Printf("Failed getting database identifier with error - %+v\n", err)
+//-----------------
+// Database Helpers
+//-----------------
+
+func (c *Company) DBCollums() []string {
+	// Capture the type of struct we are.
+	modelStruct := reflect.TypeOf(c)
+	// count := modelStruct.NumField()
+
+	// Itterate through all feilds to get DB tags.
+	sqlCollums := []string{}
+	for i := 0; i < modelStruct.NumField(); i++ {
+		field := modelStruct.Field(i)
+		tagValue := field.Tag.Get(modelTag)
+		if tagValue != "" {
+			sqlCollums = append(sqlCollums, tagValue)
 		}
 	}
-	if companyID == "" {
-		errorString := fmt.Sprintf("Failed to get Database identifier with error: %v\n", err)
-		err = errors.New(errorString)
+	return sqlCollums
+}
+
+func (c *Company) DBValues([]string) []interface{} {
+	// Capture the type of struct we are.
+	modelStruct := reflect.TypeOf(*c)
+	sqlValues := []interface{}{}
+
+	// Itterate through all feilds to get DB tags.
+	for i := 0; i < modelStruct.NumField(); i++ {
+		value := reflect.ValueOf(*c).Field(i)
+		if &value != nil {
+			sqlValues = append(sqlValues, value)
+		}
 	}
-	return companyID, err
+	return sqlValues
 }
 
 func CompanyFromQuery(rows *sql.Rows) Company {
@@ -97,4 +108,20 @@ func CompanyFromQuery(rows *sql.Rows) Company {
 	// TODO - Fix this shit
 	company.Created = "created"
 	return company
+}
+
+func Keys(m map[string]interface{}) []string {
+	keys := []string{}
+	for k := range mymap {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func Values(m map[string]interface{}) []string {
+	values := []interface{}{}
+	for _, v := range mymap {
+		values = append(values, v)
+	}
+	return values
 }
