@@ -1,14 +1,18 @@
 package model
 
-import "database/sql"
+import (
+	"reflect"
+
+	"github.com/kcoleman731/evergreen"
+)
 
 const modelTag = "model"
 
 type Model struct {
-	Identifier string `model:"identitifer"`
-	Type       string `model:"type"`
-	tableName  string `model:"table_name"`
-	db         *sql.DB
+	ID        int64  `model:"identitifer"`
+	Type      string `model:"type"`
+	TableName string `model:"table_name"`
+	db        evergreen.Database
 }
 
 type ModelInterface interface {
@@ -33,7 +37,7 @@ type ModelInterface interface {
 	// `Values` - A map of values for which a query will be performed.
 	//
 	// `Limit` - Used to specify the limit of records returned.
-	Find(values map[string]interface{}, limit int)
+	Find(params map[string]interface{}, limit int)
 
 	// Description prints a simple, human readable description of the model.
 	Description()
@@ -48,4 +52,36 @@ type ModelInterface interface {
 	// SQLCollums returns an array containing all of the database collumns
 	// for the model.
 	DBValues([]string)
+}
+
+func DBCollums(i interface{}) []string {
+	// Capture the type of struct we are.
+	modelStruct := reflect.TypeOf(i)
+	// count := modelStruct.NumField()
+
+	// Itterate through all feilds to get DB tags.
+	sqlCollums := []string{}
+	for c := 0; c < modelStruct.NumField(); c++ {
+		field := modelStruct.Field(c)
+		tagValue := field.Tag.Get(modelTag)
+		if tagValue != "" {
+			sqlCollums = append(sqlCollums, tagValue)
+		}
+	}
+	return sqlCollums
+}
+
+func DBValues(i interface{}) []interface{} {
+	// Capture the type of struct we are.
+	modelStruct := reflect.TypeOf(i)
+	sqlValues := []interface{}{}
+
+	// Itterate through all feilds to get DB tags.
+	for v := 0; v < modelStruct.NumField(); v++ {
+		value := reflect.ValueOf(i).Field(v)
+		if &value != nil {
+			sqlValues = append(sqlValues, value)
+		}
+	}
+	return sqlValues
 }
